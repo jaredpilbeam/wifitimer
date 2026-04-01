@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Will keep running until quit
 current_time=$(date +%H%M)
+SSID=$(nmcli connection show | head -n 2 | tail -n 1 | cut -d " " -f 1)
+
 echo "wifitimer script is now running..."
 echo "wifitimer started at $current_time" >>wifitimer.log
 while true; do
@@ -36,7 +38,7 @@ while true; do
   done
   if ((DISCONNECTED == 0)); then
     if ((STATUS == 0)); then
-      nmcli dev wifi connect TP-Link_9ACC_5G >>wifitimer.log
+      nmcli dev wifi connect $SSID >>wifitimer.log
     fi
   fi
   sleep 10
