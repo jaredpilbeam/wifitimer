@@ -1,21 +1,43 @@
 #!/usr/bin/env bash
 # Will keep running until quit
+current_time=$(date +%H%M)
 echo "wifitimer script is now running..."
+echo "wifitimer started at $current_time" >>wifitimer.log
 while true; do
   # establish current time, and define whether the link is up or down.
   current_time=$(date +%H%M)
-  if nmcli general status | grep --quiet "connected"; then
+
+  if nmcli general status | grep --quiet "full"; then
     STATUS=1
   else
     STATUS=0
   fi
-  # Define the timeframes under which the link should be up or down.
-  if (((current_time >= 845 && current_time < 1215 && STATUS == 1) || (current_time >= 1245 && current_time < 1745 && STATUS == 1) || (\
-    current_time >= 2300 && current_time < 2359 && STATUS == 1) || (current_time >= 1 && current_time < 700 && STATUS == 1))); then
-    nmcli device disconnect wlp11s0
-  elif (((current_time >= 700 && current_time < 845 && STATUS == 0) || (current_time >= 1215 && current_time < 1245 && STATUS == 0) || (\
-    current_time >= 1745 && current_time < 2300 && STATUS == 0))); then
-    nmcli dev wifi connect TP-Link_9ACC_5G
+  echo $STATUS
+
+  # Reading each column of schedule.csv into its own array.
+  montharray=($(tail -n +2 schedule.csv | cut -d "," -f1))
+  dayarray=($(tail -n +2 schedule.csv | cut -d "," -f2))
+  yeararray=($(tail -n +2 schedule.csv | cut -d "," -f3))
+  dayofweekarray=($(tail -n +2 schedule.csv | cut -d "," -f4))
+  starttimearray=($(tail -n +2 schedule.csv | cut -d "," -f5))
+  endtimearray=($(tail -n +2 schedule.csv | cut -d "," -f6))
+
+  DISCONNECTED=0
+  for i in "${!starttimearray[@]}"; do
+    start="${starttimearray[i]}"
+    end="${endtimearray[i]}"
+    if ((current_time >= start && current_time < end)); then
+      if ((STATUS == 1)); then
+        nmcli device disconnect wlp11s0 >>wifitimer.log
+      fi
+      DISCONNECTED=1
+      break
+    fi
+  done
+  if ((DISCONNECTED == 0)); then
+    if ((STATUS == 0)); then
+      nmcli dev wifi connect TP-Link_9ACC_5G >>wifitimer.log
+    fi
   fi
   sleep 10
 done
@@ -25,3 +47,4 @@ done
 # Should iterate through the array of pairs, and if the current time is outside of those intervals, then connect the wifi, otherwise, disconnect.
 # Ultimately when this is in a nice Python program this data can be fed in through a Python Dict.
 # Need to figure out a way to pass in the wifi password without exposing it in plaintext.
+# Need to work on logging for connections, disconnections, errors, etc.
