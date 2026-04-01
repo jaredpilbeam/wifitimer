@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Will keep running until quit
+echo "wifitimer script is now running..."
+while true; do
+  # establish current time, and define whether the link is up or down.
+  current_time=$(date +%H%M)
+  if nmcli general status | grep --quiet "connected"; then
+    STATUS=1
+  else
+    STATUS=0
+  fi
+  # Define the timeframes under which the link should be up or down.
+  if (((current_time >= 845 && current_time < 1215 && STATUS == 1) || (current_time >= 1245 && current_time < 1745 && STATUS == 1) || (\
+    current_time >= 2300 && current_time < 2359 && STATUS == 1) || (current_time >= 1 && current_time < 700 && STATUS == 1))); then
+    nmcli device disconnect wlp11s0
+  elif (((current_time >= 700 && current_time < 845 && STATUS == 0) || (current_time >= 1215 && current_time < 1245 && STATUS == 0) || (\
+    current_time >= 1745 && current_time < 2300 && STATUS == 0))); then
+    nmcli dev wifi connect TP-Link_9ACC_5G
+  fi
+  sleep 10
+done
+
+# TO DO
+# Need to provide parameter array expansion to pass in an array of start and end times to the script.
+# Should iterate through the array of pairs, and if the current time is outside of those intervals, then connect the wifi, otherwise, disconnect.
+# Ultimately when this is in a nice Python program this data can be fed in through a Python Dict.
+# Need to figure out a way to pass in the wifi password without exposing it in plaintext.
