@@ -3,9 +3,11 @@
 current_time=$(date +%H%M)
 SSID=$(nmcli connection show | head -n 2 | tail -n 1 | cut -d " " -f 1)
 
-echo "wifitimer script is now running..."
+echo "wifitimer script is now running... press q to quit."
 echo "wifitimer started at $current_time" >>wifitimer.log
-while true; do
+input=""
+while [[ "$input" != "q" ]]; do
+  read -r -s -n 1 input
   # establish current time, and define whether the link is up or down.
   current_time=$(date +%H%M)
 
@@ -14,7 +16,6 @@ while true; do
   else
     STATUS=0
   fi
-  echo $STATUS
 
   # Reading each column of schedule.csv into its own array.
   montharray=($(tail -n +2 schedule.csv | cut -d "," -f1))
@@ -41,8 +42,11 @@ while true; do
       nmcli dev wifi connect $SSID >>wifitimer.log
     fi
   fi
-  sleep 10
+  sleep 1
 done
+
+nmcli dev wifi connect $SSID >>wifitimer.log
+echo "Quitting program..."
 
 # TO DO
 # Need to provide parameter array expansion to pass in an array of start and end times to the script.
