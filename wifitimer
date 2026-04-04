@@ -5,11 +5,10 @@ SSID=$(nmcli connection show | head -n 2 | tail -n 1 | cut -d " " -f 1)
 
 echo "wifitimer script is now running... press q to quit."
 echo "wifitimer started at $current_time" >>wifitimer.log
-input=""
-while [[ "$input" != "q" ]]; do
-  read -r -s -n 1 input
+while [[ $input != "q" ]]; do
+  read -r -s -n 1 -t 0.3 input
   # establish current time, and define whether the link is up or down.
-  current_time=$(date +%H%M)
+  current_time=$(date +%-H%M)
 
   if nmcli general status | grep --quiet "full"; then
     STATUS=1
@@ -26,7 +25,11 @@ while [[ "$input" != "q" ]]; do
   endtimearray=($(tail -n +2 schedule.csv | cut -d "," -f6))
 
   DISCONNECTED=0
-  for i in "${!starttimearray[@]}"; do
+  for i in "${!yeararray[@]}"; do
+    year="${yeararray[i]}"
+    month="${montharray[i]}"
+    day="${dayarray[i]}"
+    dayofweek="${dayofweekarray[i]}"
     start="${starttimearray[i]}"
     end="${endtimearray[i]}"
     if ((current_time >= start && current_time < end)); then
@@ -42,15 +45,12 @@ while [[ "$input" != "q" ]]; do
       nmcli dev wifi connect $SSID >>wifitimer.log
     fi
   fi
-  sleep 1
+  sleep 0.3
 done
 
 nmcli dev wifi connect $SSID >>wifitimer.log
 echo "Quitting program..."
 
 # TO DO
-# Need to provide parameter array expansion to pass in an array of start and end times to the script.
-# Should iterate through the array of pairs, and if the current time is outside of those intervals, then connect the wifi, otherwise, disconnect.
 # Ultimately when this is in a nice Python program this data can be fed in through a Python Dict.
-# Need to figure out a way to pass in the wifi password without exposing it in plaintext.
 # Need to work on logging for connections, disconnections, errors, etc.
