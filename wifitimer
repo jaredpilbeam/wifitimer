@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Will keep running until quit
-current_time=$(date +%H%M)
-SSID=$(nmcli connection show | head -n 2 | tail -n 1 | cut -d " " -f 1)
 
 echo "wifitimer script is now running... press q to quit."
-echo "wifitimer started at $current_time" >>wifitimer.log
+echo "$(date) wifitimer started" >>wifitimer.log
 while [[ $input != "q" ]]; do
-  read -r -s -n 1 -t 0.3 input
-  # establish current time, and define whether the link is up or down.
   current_time=$(date +%-H%M)
+  current_day=$(date +%d)
+  current_month=$(date +%m)
+  current_year=$(date +%Y)
+  current_dayofweek=($(date +%w) + 1)
 
   if nmcli general status | grep --quiet "full"; then
     STATUS=1
@@ -24,7 +23,6 @@ while [[ $input != "q" ]]; do
   starttimearray=($(tail -n +2 schedule.csv | cut -d "," -f5))
   endtimearray=($(tail -n +2 schedule.csv | cut -d "," -f6))
 
-  DISCONNECTED=0
   for i in "${!yeararray[@]}"; do
     year="${yeararray[i]}"
     month="${montharray[i]}"
@@ -32,24 +30,47 @@ while [[ $input != "q" ]]; do
     dayofweek="${dayofweekarray[i]}"
     start="${starttimearray[i]}"
     end="${endtimearray[i]}"
-    if ((current_time >= start && current_time < end)); then
+    if ((year == current_year && month == current_month && day == current_day && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
-        nmcli device disconnect wlp11s0 >>wifitimer.log
+        nmcli radio all off
+        echo $(date)" networking disabled" >>wifitimer.log
       fi
       DISCONNECTED=1
       break
     fi
+    if ((year == 0 && month == 0 && day == 0 && dayofweek == current_dayofweek && current_time >= start && current_time < end)); then
+      if ((STATUS == 1)); then
+        nmcli radio all off
+        echo $(date)" networking disabled" >>wifitimer.log
+      fi
+      DISCONNECTED=1
+      break
+    fi
+    if ((year == 0 && month == 0 && day == 0 && dayofweek == 0 && current_time >= start && current_time < end)); then
+      if ((STATUS == 1)); then
+        nmcli radio all off
+        echo $(date)" networking disabled" >>wifitimer.log
+        sleep 5
+      fi
+      DISCONNECTED=1
+      break
+    fi
+    DISCONNECTED=0
   done
   if ((DISCONNECTED == 0)); then
     if ((STATUS == 0)); then
-      nmcli dev wifi connect $SSID >>wifitimer.log
+      nmcli radio all on
+      echo $(date)" networking enabled" >>wifitimer.log
+      sleep 5
     fi
   fi
-  sleep 0.3
+  read -t 1 -n 1 input
 done
 
-nmcli dev wifi connect $SSID >>wifitimer.log
-echo "Quitting program..."
+nmcli radio all on
+echo $(date)" networking enabled" >>wifitimer.log
+printf "\nQuitting program..."
+echo $(date)" program succesfully exited" >>wifitimer.log
 
 # TO DO
 # Ultimately when this is in a nice Python program this data can be fed in through a Python Dict.
