@@ -71,7 +71,3 @@ nmcli radio all on
 echo $(date)" networking enabled" >>wifitimer.log
 printf "\nQuitting program..."
 echo $(date)" program succesfully exited" >>wifitimer.log
-
-# TO DO
-# Ultimately when this is in a nice Python program this data can be fed in through a Python Dict.
-# Need to work on logging for connections, disconnections, errors, etc.
