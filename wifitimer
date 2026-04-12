@@ -1,54 +1,103 @@
 #!/usr/bin/env bash
+#                                      Wifitimer
+# A script to schedule internet connection/disconnection daily, weekly, or by date.
+# ____________________________________________________________________________________________
+#
+# Enter the timeframes when you want the internet to disconnect.
+# To specify a specific date out of the year, write "(Month) (Day) (Year) 0 (StartTime) (EndTime)"
+# To specify a recurring day of the week, write "0 0 0 (DayofWeek) (StartTime) (EndTime)"
+# To specify a daily recurring interval, "0 0 0 0 StartTime EndTime"
+# Express all values as integers.(i.e., month by 1-12, Day of Week as 1-7, times as 24-hour values)
+# If the interval goes to the next day, schedule as two entries(one going up to midnight, and the next one after midnight.)
+
+#          month(1-12) dayofmonth year(2026) dayofweek(1-7) starttime endtime
+schedule=("0           0          0          0              1240      1255"
+
+)
 
 echo "wifitimer script is now running... press q to quit."
 echo "$(date) wifitimer started" >>wifitimer.log
 while [[ $input != "q" ]]; do
+
+  # Get current datetime information
   current_time=$(date +%-H%M)
   current_day=$(date +%d)
   current_month=$(date +%m)
   current_year=$(date +%Y)
   current_dayofweek=($(date +%w) + 1)
 
+  # Check the current internet connection status
   if nmcli general status | grep --quiet "full"; then
     STATUS=1
   else
     STATUS=0
   fi
 
-  # Reading each column of schedule.csv into its own array.
-  montharray=($(tail -n +2 schedule.csv | cut -d "," -f1))
-  dayarray=($(tail -n +2 schedule.csv | cut -d "," -f2))
-  yeararray=($(tail -n +2 schedule.csv | cut -d "," -f3))
-  dayofweekarray=($(tail -n +2 schedule.csv | cut -d "," -f4))
-  starttimearray=($(tail -n +2 schedule.csv | cut -d "," -f5))
-  endtimearray=($(tail -n +2 schedule.csv | cut -d "," -f6))
+  # Parse each line in the schedule
+  for line in "${!schedule[@]}"; do
+    IFS=" " read -a array <<<"${schedule[line]}"
+    year="${array[2]}"
+    month="${array[0]}"
+    day="${array[1]}"
+    dayofweek="${array[3]}"
+    start="${array[4]}"
+    end="${array[5]}"
 
-  for i in "${!yeararray[@]}"; do
-    year="${yeararray[i]}"
-    month="${montharray[i]}"
-    day="${dayarray[i]}"
-    dayofweek="${dayofweekarray[i]}"
-    start="${starttimearray[i]}"
-    end="${endtimearray[i]}"
+    # Validate inputs, numbers only
+    if ! [[ $year =~ ^[0-9]+$ ]] || ! [[ $month =~ ^[0-9]+$ ]] || ! [[ $day =~ ^[0-9]+$ ]] ||
+      ! [[ $dayofweek =~ ^[0-9]+$ ]] || ! [[ $start =~ ^[0-9]+$ ]] || ! [[ $end =~ ^[0-9]+$ ]]; then
+      echo "Invalid schedule entry, check to make sure all values are numbers."
+      exit 1
+    fi
+
+    # Make sure proper format is followed for yearly, weekly, and daily schedule entries
+    if ((year != 0 && (month == 0 || day == 0 || dayofweek != 0))); then
+      echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence."
+      exit 1
+    fi
+    if ((month != 0 && (year == 0 || day == 0 || dayofweek != 0))); then
+      echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence."
+      exit 1
+    fi
+    if ((day != 0 && (month == 0 || year == 0 || dayofweek != 0))); then
+      echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence."
+      exit 1
+    fi
+    if ((dayofweek != 0 && (month != 0 || year != 0 || day != 0))); then
+      echo "Invalid schedule entry. Specify either weekly or specific day out of the year, not both."
+      exit 1
+    fi
+    if ((start > end)); then
+      echo "Invalid schedule entry. Start time is after end time. Create two entries if scheduling through to next day."
+      exit 1
+    fi
+
+    # Disconnect on specifiied date-time of year
     if ((year == current_year && month == current_month && day == current_day && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
-        nmcli radio all off
+        nmcli networking off
         echo $(date)" networking disabled" >>wifitimer.log
+        sleep 5
       fi
       DISCONNECTED=1
       break
     fi
+
+    # Disconnect weekly on specified day of week
     if ((year == 0 && month == 0 && day == 0 && dayofweek == current_dayofweek && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
-        nmcli radio all off
+        nmcli networking off
         echo $(date)" networking disabled" >>wifitimer.log
+        sleep 5
       fi
       DISCONNECTED=1
       break
     fi
+
+    # Disconnect daily at specified time
     if ((year == 0 && month == 0 && day == 0 && dayofweek == 0 && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
-        nmcli radio all off
+        nmcli networking off
         echo $(date)" networking disabled" >>wifitimer.log
         sleep 5
       fi
@@ -57,17 +106,19 @@ while [[ $input != "q" ]]; do
     fi
     DISCONNECTED=0
   done
+
+  # reconnect outside of the specified intervals
   if ((DISCONNECTED == 0)); then
     if ((STATUS == 0)); then
-      nmcli radio all on
+      nmcli networking on
       echo $(date)" networking enabled" >>wifitimer.log
       sleep 5
     fi
   fi
   read -t 1 -n 1 input
 done
-
-nmcli radio all on
+# reconnect internet before quitting
+nmcli networking on
 echo $(date)" networking enabled" >>wifitimer.log
 printf "\nQuitting program..."
 echo $(date)" program succesfully exited" >>wifitimer.log
