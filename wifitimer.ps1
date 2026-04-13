@@ -85,8 +85,8 @@ while ($input.Character -ne "q")
     if (($year -eq $current_year) -and ($month -eq $current_month) -and ($day -eq $current_day) -and ($current_time -ge $start) -and ($current_time -lt $end))
     {
       if ($STATUS -eq 1){
-        Disable-NetAdapter -Name "Wi-Fi" -Confirm:$false -ErrorAction SilentlyContinue
-        Disable-NetAdapter -Name "Ethernet" -Confirm:$false -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Wi-Fi*" -Confirm:$false -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Ethernet*" -Confirm:$false -ErrorAction SilentlyContinue
         Write-Output $(Get-Date) "networking disabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append 
         Start-Sleep -Seconds 1
       }
@@ -97,8 +97,8 @@ while ($input.Character -ne "q")
     # Disconnect weekly on specified day of week
     if (($year -eq 0) -and ($month -eq 0) -and ($day -eq 0) -and ($dayofweek -eq $current_dayofweek) -and ($current_time -ge $start) -and ($current_time -lt $end)){
       if ($STATUS -eq 1){
-        Disable-NetAdapter -Name "Wi-Fi" -Confirm:$false  -ErrorAction SilentlyContinue
-        Disable-NetAdapter -Name "Ethernet" -Confirm:$false  -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Wi-Fi*" -Confirm:$false  -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Ethernet*" -Confirm:$false  -ErrorAction SilentlyContinue
         Write-Output $(Get-Date) "networking disabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append 
         Start-Sleep -Seconds 1
       }
@@ -109,8 +109,8 @@ while ($input.Character -ne "q")
     # Disconnect daily at specified time
     if ($year -eq 0 -and( $month -eq 0 ) -and ( $day -eq 0 ) -and  ( $dayofweek -eq 0 ) -and ( $current_time -ge $start ) -and ( $current_time -lt $end)){
       if (($STATUS -eq 1)){
-        Disable-NetAdapter -Name "Wi-Fi" -Confirm:$false  -ErrorAction SilentlyContinue
-        Disable-NetAdapter -Name "Ethernet" -Confirm:$false  -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Wi-Fi*" -Confirm:$false  -ErrorAction SilentlyContinue
+        Disable-NetAdapter -Name "Ethernet*" -Confirm:$false  -ErrorAction SilentlyContinue
         Write-Output $(Get-Date) "networking disabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append
         Start-Sleep -Seconds 1
       }
@@ -123,8 +123,8 @@ while ($input.Character -ne "q")
   # reconnect outside of the specified intervals
   if ($DISCONNECTED -eq 0){
     if ($STATUS -eq 0){
-    Enable-NetAdapter -Name "Wi-Fi" -Confirm:$false  -ErrorAction SilentlyContinue
-    Enable-NetAdapter -Name "Ethernet" -Confirm:$false  -ErrorAction SilentlyContinue
+    Enable-NetAdapter -Name "Wi-Fi*" -Confirm:$false  -ErrorAction SilentlyContinue
+    Enable-NetAdapter -Name "Ethernet*" -Confirm:$false  -ErrorAction SilentlyContinue
     Write-Output $(Get-Date) "networking enabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append
     Start-Sleep -Seconds 1
     }
@@ -135,8 +135,8 @@ while ($input.Character -ne "q")
 
 # reconnect internet before quitting
 if ($STATUS -eq 0){
-Enable-NetAdapter -Name "Wi-Fi" -Confirm:$false  -ErrorAction SilentlyContinue
-Enable-NetAdapter -Name "Ethernet" -Confirm:$false  -ErrorAction SilentlyContinue
+Enable-NetAdapter -Name "Wi-Fi*" -Confirm:$false  -ErrorAction SilentlyContinue
+Enable-NetAdapter -Name "Ethernet*" -Confirm:$false  -ErrorAction SilentlyContinue
 Write-Output $(Get-Date) "networking enabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append
 }
 Write-Output "`nQuitting program..."
