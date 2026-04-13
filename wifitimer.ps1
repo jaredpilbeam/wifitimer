@@ -129,15 +129,21 @@ while ($input.Character -ne "q")
     Start-Sleep -Seconds 1
     }
   }
-  $input = $Host.UI.RawUI.ReadKey()
+  if([console]::KeyAvailable)
+    {
+        $input = [System.Console]::ReadKey() 
+
+        switch ( $input.key)
+        {
+            q { $input="q" }
+        }
+    } 
   Start-Sleep -Seconds 0.1
 }
 
 # reconnect internet before quitting
-if ($STATUS -eq 0){
 Enable-NetAdapter -Name "Wi-Fi*" -Confirm:$false  -ErrorAction SilentlyContinue
 Enable-NetAdapter -Name "Ethernet*" -Confirm:$false  -ErrorAction SilentlyContinue
 Write-Output $(Get-Date) "networking enabled" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append
-}
 Write-Output "`nQuitting program..."
 Write-Output $(Get-Date) "program succesfully exited" | Out-File -FilePath $PSScriptRoot\wifitimer.log -Append

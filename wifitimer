@@ -11,7 +11,7 @@
 # If the interval goes to the next day, schedule as two entries(one going up to midnight, and the next one after midnight.)
 
 #          month(1-12) dayofmonth year(2026) dayofweek(1-7) starttime endtime
-schedule=("0           0          0          0              1200      2359"
+schedule=("0           0          0          0              1100      2359"
           "0           0          0          0              0          200"
 )
 
