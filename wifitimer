@@ -11,8 +11,7 @@
 # If the interval goes to the next day, schedule as two entries(one going up to midnight, and the next one after midnight.)
 
 #          month(1-12) dayofmonth year(2026) dayofweek(1-7) starttime endtime
-schedule=("0           0          0          0              1300      1400"
-
+schedule=("0           0          0          2              1100      1400"
 )
 
 echo "wifitimer script is now running... press q to quit."
@@ -47,38 +46,32 @@ while [[ $input != "q" ]]; do
     if ! [[ $year =~ ^[0-9]+$ ]] || ! [[ $month =~ ^[0-9]+$ ]] || ! [[ $day =~ ^[0-9]+$ ]] ||
       ! [[ $dayofweek =~ ^[0-9]+$ ]] || ! [[ $start =~ ^[0-9]+$ ]] || ! [[ $end =~ ^[0-9]+$ ]]; then
       echo "Invalid schedule entry, check to make sure all values are numbers." >>wifitimer.log
-
       exit 1
     fi
 
     # Make sure proper format is followed for yearly, weekly, and daily schedule entries
     if ((year != 0 && (month == 0 || day == 0 || dayofweek != 0))); then
       echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence." >>wifitimer.log
-
       exit 1
     fi
     if ((month != 0 && (year == 0 || day == 0 || dayofweek != 0))); then
       echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence." >>wifitimer.log
-
       exit 1
     fi
     if ((day != 0 && (month == 0 || year == 0 || dayofweek != 0))); then
       echo "Invalid schedule entry. Specify year, month and day, or leave all as 0 for daily recurrence." >>wifitimer.log
-
       exit 1
     fi
     if ((dayofweek != 0 && (month != 0 || year != 0 || day != 0))); then
       echo "Invalid schedule entry. Specify either weekly or specific day out of the year, not both." >>wifitimer.log
-
       exit 1
     fi
     if ((start > end)); then
       echo "Invalid schedule entry. Start time is after end time. Create two entries if scheduling through to next day." >>wifitimer.log
-
       exit 1
     fi
 
-    # Disconnect on specifiied date-time of year
+    # Disconnect on specified date-time of year
     if ((year == current_year && month == current_month && day == current_day && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
         nmcli networking off
@@ -90,7 +83,7 @@ while [[ $input != "q" ]]; do
     fi
 
     # Disconnect weekly on specified day of week
-    if ((year == 0 && month == 0 && day == 0 && dayofweek == current_dayofweek && current_time >= start && current_time < end)); then
+    if ((dayofweek == current_dayofweek && current_time >= start && current_time < end)); then
       if ((STATUS == 1)); then
         nmcli networking off
         echo $(date)" networking disabled" >>wifitimer.log
